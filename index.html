@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make-A-Wish Photobook Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&family=Bangers&family=Fredoka+One&family=Righteous&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     TOP BAR
+══════════════════════════════════ -->
+<div class="topbar">
+  <!-- Brand -->
+  <div class="brand">Make-A-Wish <span>&nbsp;Photobook</span></div>
+
+  <!-- Tab buttons -->
+  <div class="tabs">
+    <button class="tab on"  id="t1" onclick="goTab('c')"><span class="num">1</span> Customise</button>
+    <button class="tab off" id="t2" onclick="goTab('e')"><span class="num">2</span> Edit Photobook</button>
+  </div>
+
+  <!-- Editor-only controls (hidden on customise tab) -->
+  <div class="top-acts" id="eActs" style="display:none">
+    <label>Name  <input type="text"   id="cName"  value="Alex"                          oninput="rp();scheduleSave()"></label>
+    <label>Age   <input type="number" id="cAge"   value="8" min="1" max="18"            oninput="rp();scheduleSave()"></label>
+    <label>Wish  <input type="text"   id="cWish"  value="To be a superhero for a day!"  oninput="rp();scheduleSave()"></label>
+    <div class="vr"></div>
+    <!-- Undo / Redo -->
+    <button class="btn btn-undo" id="undoBtn" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩</button>
+    <button class="btn btn-undo" id="redoBtn" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪</button>
+    <div class="vr"></div>
+    <button class="btn btn-t" id="sidebarBtn" onclick="toggleSidebar()">✏ Text &amp; Stickers</button>
+    <!-- Crop marks -->
+    <label style="color:rgba(255,255,255,.55);font-size:10px;gap:4px;white-space:nowrap">
+      <input type="checkbox" id="cropMarksChk" style="width:auto;display:inline"> Crop marks
+    </label>
+    <button class="btn btn-r" onclick="exportCoverPages()">🖨 Export Cover</button>
+    <button class="btn btn-r" onclick="exportContentPages()">🖨 Export Content</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     LAYOUT WRAPPER
+══════════════════════════════════ -->
+<div class="app-body">
+
+  <!-- ── VIEW 1: CUSTOMISE ── -->
+  <div class="view on" id="vc">
+    <div class="cw">
+      <div class="chdr">
+        <h1>Customise Your Photobook</h1>
+        <p>Choose your colours, font, and shape style. These apply across every page of the book.</p>
+      </div>
+
+      <!-- LIVE PREVIEW -->
+      <div class="mini-preview-card">
+        <div class="mini-preview-title">Live Preview</div>
+        <div class="mini-preview-outer">
+          <div id="miniPreviewInner"></div>
+        </div>
+      </div>
+
+      <!-- 1. COLOUR SCHEME -->
+      <div class="sc">
+        <div class="slbl"><span class="sn">1</span> Colour Scheme <span class="slbl-note">— up to 5 colours</span></div>
+        <div class="presets" id="presets"></div>
+        <div class="cprow"   id="cprow"></div>
+      </div>
+
+      <!-- 2. FONT -->
+      <div class="sc">
+        <div class="slbl"><span class="sn">2</span> Font Style</div>
+        <div class="fgrid" id="fgrid"></div>
+      </div>
+
+      <!-- 3. SHAPE STYLE -->
+      <div class="sc">
+        <div class="slbl"><span class="sn">3</span> Shape Style</div>
+        <div class="sgrid">
+          <div class="shcard sel" id="sh-curved" onclick="pickShape('curved')">
+            <div class="sdemo"><div class="di circ"></div></div>
+            <div class="shtitle">Curved &amp; Soft</div>
+            <div class="shdesc">Rounded photo frames, circular double-ring cover photo, organic blob accents.</div>
+          </div>
+          <div class="shcard" id="sh-angular" onclick="pickShape('angular')">
+            <div class="sdemo">
+              <div class="di star" style="width:52px;height:52px"></div>
+              <div class="di hex"  style="width:42px;height:42px;opacity:.65"></div>
+              <div class="di dia"></div>
+            </div>
+            <div class="shtitle">Bold &amp; Angular</div>
+            <div class="shdesc">Triple-ring starburst cover frame, mixed polygon &amp; star accents throughout.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. PAGE STYLE -->
+      <div class="sc">
+        <div class="slbl"><span class="sn">4</span> Page Style</div>
+        <div class="pgstyle-grid" id="pgBgGrid"></div>
+      </div>
+
+      <!-- 5. CUSTOM STICKERS -->
+      <div class="sc">
+        <div class="slbl"><span class="sn">5</span> Upload Extra Stickers <span class="slbl-note">— add your own PNG images</span></div>
+        <div class="stk-area" id="stkArea">
+          <div class="upbox" onclick="document.getElementById('stkUp').click()">
+            <div class="pl">+</div><div class="ul">Upload</div>
+          </div>
+          <span class="stk-hint">Uploaded stickers appear in the sidebar sticker tray.</span>
+        </div>
+        <input type="file" id="stkUp" accept="image/*" multiple onchange="addCustomStickers(this)">
+      </div>
+
+      <div class="cta">
+        <p>All set? Head to the editor to add your photos.</p>
+        <button class="btn btn-r cta-btn" onclick="goTab('e')">Continue to Editor →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VIEW 2: EDITOR ── -->
+  <div class="view" id="ve">
+
+    <!-- Editor canvas column -->
+    <div class="editor-main" id="editorMain">
+      <div class="pnav">
+        <button id="pvb" onclick="gp(-1)" disabled>◀</button>
+        <div class="pinfo" id="pinfo">Front Cover</div>
+        <button id="nxb" onclick="gp(1)">▶</button>
+        <!-- Zoom controls -->
+        <div class="zoom-row">
+          <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">−</button>
+          <span id="zoomPct">100%</span>
+          <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
+        </div>
+      </div>
+      <div class="cwrap" id="cwrap"></div>
+    </div>
+
+    <!-- Sidebar (hidden until toggled) -->
+    <div class="sidebar" id="sidebar">
+      <div class="sb-header">
+        <div class="sb-tabs">
+          <button class="sb-tab on"  id="sbt-text"      onclick="sbTab('text')">Text</button>
+          <button class="sb-tab"     id="sbt-stickers"  onclick="sbTab('stickers')">Stickers</button>
+        </div>
+        <button class="sb-close" onclick="toggleSidebar()">✕</button>
+      </div>
+
+      <!-- Page-side picker -->
+      <div class="sb-page-picker" id="sbPagePicker" style="display:none">
+        <span class="sb-page-label">Place on:</span>
+        <div class="sb-page-btns">
+          <button class="sb-page-btn on" id="sppL" onclick="setSide('L')">◀ Left page</button>
+          <button class="sb-page-btn"    id="sppR" onclick="setSide('R')">Right page ▶</button>
+        </div>
+      </div>
+
+      <!-- TEXT PANEL -->
+      <div class="sb-panel" id="sbp-text" style="display:flex">
+        <div class="sb-section-title">Text Options</div>
+
+        <div class="sb-row">
+          <label class="sb-lbl">Font Size
+            <div class="sb-input-row">
+              <input type="number" id="textSize" class="sb-num" value="20" min="8" max="120" step="1">
+              <span class="sb-unit">px</span>
+            </div>
+          </label>
+          <label class="sb-lbl">Rotation
+            <div class="sb-input-row">
+              <input type="number" id="textRotate" class="sb-num" value="0" min="-180" max="180" step="1"
+                     oninput="updateSelectedRotation(this.value)">
+              <span class="sb-unit">°</span>
+            </div>
+          </label>
+        </div>
+
+        <label class="sb-lbl" style="margin-top:8px">Colour
+          <div class="tcolor-row">
+            <div class="tc-swatch" style="background:var(--tc0)" onclick="pickTextColor(0)" title="Theme colour 1"></div>
+            <div class="tc-swatch" style="background:var(--tc1)" onclick="pickTextColor(1)" title="Theme colour 2"></div>
+            <div class="tc-swatch" style="background:var(--tc2)" onclick="pickTextColor(2)" title="Theme colour 3"></div>
+            <div class="tc-swatch" style="background:var(--tc3)" onclick="pickTextColor(3)" title="Theme colour 4"></div>
+            <div class="tc-swatch" style="background:var(--tc4)" onclick="pickTextColor(4)" title="Theme colour 5"></div>
+            <div class="tcolor-wrap" title="Custom colour"><input type="color" id="textColor" value="#1A3A5C"></div>
+          </div>
+        </label>
+
+        <!-- Formatting buttons -->
+        <div class="sb-section-title" style="margin-top:10px">Formatting</div>
+        <div class="sb-fmt-row">
+          <button class="sb-fmt-btn on"  id="fmtBold"      title="Bold"        onclick="updateSelectedBold()"><b>B</b></button>
+          <button class="sb-fmt-btn"     id="fmtItalic"   title="Italic"      onclick="updateSelectedItalic()"><i>I</i></button>
+          <button class="sb-fmt-btn"     id="fmtUnderline" title="Underline"  onclick="updateSelectedUnderline()"><u>U</u></button>
+          <button class="sb-fmt-btn on"  id="fmtAlignL"   data-align="left"   title="Align left"   onclick="updateSelectedAlign('left')">&#8676;</button>
+          <button class="sb-fmt-btn"     id="fmtAlignC"   data-align="center" title="Align centre" onclick="updateSelectedAlign('center')">&#8644;</button>
+          <button class="sb-fmt-btn"     id="fmtAlignR"   data-align="right"  title="Align right"  onclick="updateSelectedAlign('right')">&#8677;</button>
+        </div>
+
+        <button class="sb-add-btn" onclick="placeTextBox()">+ Add Text</button>
+        <p class="sb-hint">Click a text box to select it, then drag to move. Use ↻ handle to rotate. Delete key removes selected. Arrows nudge.</p>
+      </div>
+
+      <!-- STICKERS PANEL -->
+      <div class="sb-panel" id="sbp-stickers" style="display:none">
+        <div class="sb-section-title">Sticker Options</div>
+
+        <div class="sb-row">
+          <label class="sb-lbl">Size
+            <div class="sb-input-row">
+              <input type="number" id="stickerSize" class="sb-num" value="80" min="20" max="300" step="5" oninput="updateStickerSize(this.value)">
+              <span class="sb-unit">px</span>
+            </div>
+          </label>
+          <label class="sb-lbl">Rotation
+            <div class="sb-input-row">
+              <input type="number" id="stickerRotate" class="sb-num" value="0" min="-180" max="180" step="1"
+                     oninput="updateSelectedRotation(this.value)">
+              <span class="sb-unit">°</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="sb-section-title" style="margin-top:14px">Click a sticker to add it</div>
+        <div class="sticker-grid" id="stickerGrid"></div>
+
+        <p class="sb-hint">Drag stickers to reposition. Use ↻ handle to rotate. Delete key removes selected.</p>
+      </div>
+    </div>
+
+  </div><!-- /ve -->
+
+</div><!-- /app-body -->
+
+<!-- Export progress toast -->
+<div id="exportToast" class="export-toast" style="display:none">
+  <div class="export-title">Exporting PDF…</div>
+  <div id="exportMsg" class="export-msg">Preparing pages…</div>
+  <div class="export-track"><div id="exportBar" class="export-bar"></div></div>
+</div>
+
+<!-- Off-screen render target -->
+<div id="exportRoot"></div>
+
+<!-- Fixed bottom thumbnail strip -->
+<div class="tstrip" id="tstrip"></div>
+
+<!-- Success modal -->
+<div id="successOverlay" class="success-overlay" style="display:none" onclick="closeSuccess()">
+  <div class="success-modal" onclick="event.stopPropagation()">
+    <div class="success-icon">
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+        <circle cx="36" cy="36" r="36" fill="#22c55e"/>
+        <polyline points="20,38 31,49 52,26" stroke="#fff" stroke-width="5.5"
+                  stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <h2 class="success-title">PDF Exported!</h2>
+    <p class="success-body">
+      Your photobook is ready. Upload it to PrintLab to get it printed and delivered.
+    </p>
+    <a class="success-btn" href="https://www.printlab.com.my/photobook/"
+       target="_blank" rel="noopener">
+      Go to PrintLab &rarr;
+    </a>
+    <button class="success-close" onclick="closeSuccess()">Close</button>
+  </div>
+</div>
+
+<!-- Crop / Reposition modal -->
+<div id="cropOverlay" class="crop-overlay" style="display:none" onclick="if(event.target===this)closeCropModal()">
+  <div class="crop-modal">
+    <div class="crop-modal-title">Reposition Photo</div>
+    <div id="cropViewport"></div>
+    <div class="crop-zoom-row">
+      <label>Zoom</label>
+      <input type="range" id="cropZoomSlider" min="100" max="300" value="100" step="5">
+    </div>
+    <p class="crop-hint">Drag the photo to reposition · Scroll the slider to zoom in</p>
+    <div class="crop-actions">
+      <button class="crop-btn crop-btn-done"    onclick="applyCrop()">✓ Done</button>
+      <button class="crop-btn crop-btn-replace" onclick="replaceCropPhoto()">↺ Replace</button>
+      <button class="crop-btn crop-btn-remove"  onclick="removeCropPhoto()">✕ Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file inputs container -->
+<div id="fi"></div>
+
+<!-- Scripts — autosave + history load before customise so CFG is primed -->
+<script src="js/config.js"></script>
+<script src="js/helpers.js"></script>
+<script src="js/autosave.js"></script>
+<script src="js/history.js"></script>
+<script src="js/builder.js"></script>
+<script src="js/customise.js"></script>
+<script src="js/stickers.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/export.js"></script>
+<script>
+  (async () => {
+    await restoreState();   // prime CFG, imgs, sstore, name/age/wish (async: loads imgs from IndexedDB)
+    buildCustomiseUI();     // build UI from current CFG
+    syncCustomiseUI();      // sync all pickers to restored CFG values
+    buildStickerGrid();     // build sticker grid
+    refreshMiniPreview();   // render initial mini preview
+    _huiUpdate();           // set initial undo/redo button states
+  })();
+</script>
+
+</body>
+</html>
