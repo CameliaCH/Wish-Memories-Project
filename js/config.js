@@ -1,10 +1,4 @@
-/**
- * config.js
- * Global configuration, constants, and shared mutable state.
- * Loaded first — all other scripts depend on these.
- */
 
-// ── User-adjustable design config ──────────────────────────────
 const CFG = {
   colors: ['#B71C1C', '#1A3A5C', '#2B79D8', '#4A90E2', '#90C2FF'],
   font:   'Baloo 2',
@@ -13,10 +7,10 @@ const CFG = {
   customStickers: []
 };
 
-// ── Colour role labels ──────────────────────────────────────────
+
 const ROLE = ['Primary', 'Secondary', 'Highlight', 'Accent 1', 'Accent 2'];
 
-// ── Preset palettes ─────────────────────────────────────────────
+
 const PALETTES = [
   { name: 'Hero Classic', c: ['#B71C1C', '#1A3A5C', '#2B79D8', '#4A90E2', '#FFFF00'] },
   { name: 'Ocean Tide',   c: ['#006D9C', '#1A3A4A', '#00D4AA', '#7EC8E3', '#FFB347'] },
@@ -25,7 +19,7 @@ const PALETTES = [
   { name: 'Galaxy',       c: ['#7B2FBE', '#0D0D2B', '#E040FB', '#00BCD4', '#FFD600'] },
 ];
 
-// ── Available fonts ─────────────────────────────────────────────
+
 const FONTS = [
   { id: 'Baloo 2',     label: 'Baloo 2',   sample: 'Adventure!' },
   { id: 'Bangers',     label: 'Bangers',   sample: 'HERO!'      },
@@ -34,7 +28,7 @@ const FONTS = [
   { id: 'Nunito',      label: 'Nunito',    sample: 'Story'      },
 ];
 
-// ── Sticker image files ─────────────────────────────────────────
+
 const STICKER_FILES = [
   'star.svg',
   'lightning.svg',
@@ -47,8 +41,7 @@ const STICKER_FILES = [
 ];
 const STICKERS_PATH = 'stickers/';
 
-// Pre-bundled data URLs — avoids file:// fetch restrictions during PDF export.
-// When a sticker is placed, we use the data URL so sstore never stores file paths.
+
 const STICKER_DATA_URLS = {
   'star.svg':      'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cG9seWdvbiBwb2ludHM9IjUwLDUgNjEsMzUgOTUsMzUgNjgsNTcgNzksOTEgNTAsNzAgMjEsOTEgMzIsNTcgNSwzNSAzOSwzNSIgZmlsbD0iI0ZGRDE2NiIgc3Ryb2tlPSIjRjVBNjIzIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+Cg==',
   'lightning.svg': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cG9seWdvbiBwb2ludHM9IjYwLDUgMjUsNTUgNDgsNTUgNDAsOTUgNzUsNDUgNTIsNDUgNjAsNSIgZmlsbD0iI0Y1QTYyMyIgc3Ryb2tlPSIjQjcxQzFDIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+Cg==',
@@ -60,7 +53,7 @@ const STICKER_DATA_URLS = {
   'wish-tag.svg':  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgNTAiPgogIDxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSIxMTYiIGhlaWdodD0iNDYiIHJ4PSIyMyIgZmlsbD0iI0I3MUMxQyIvPgogIDx0ZXh0IHg9IjYwIiB5PSIzMyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IidCYWxvbyAyJyxjdXJzaXZlIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjRkZEMTY2Ij7inKYgV0lTSCDinKY8L3RleHQ+Cjwvc3ZnPgo=',
 };
 
-// ── Angular shape clip-paths ────────────────────────────────────
+
 const ANGULAR_BLOBS = [
   'polygon(50% 0%,58.3% 19.1%,75% 6.7%,72.6% 27.4%,93.3% 25%,80.9% 41.7%,100% 50%,80.9% 58.3%,93.3% 75%,72.6% 72.6%,75% 93.3%,58.3% 80.9%,50% 100%,41.7% 80.9%,25% 93.3%,27.4% 72.6%,6.7% 75%,19.1% 58.3%,0% 50%,19.1% 41.7%,6.7% 25%,27.4% 27.4%,25% 6.7%,41.7% 19.1%)',
   'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)',
@@ -72,12 +65,7 @@ const ANGULAR_BLOBS = [
 const STAR_CLIP = ANGULAR_BLOBS[0];
 const OCT_CLIP  = 'polygon(8% 0%,92% 0%,100% 8%,100% 92%,92% 100%,8% 100%,0% 92%,0% 8%)';
 
-// ── Page manifest (32 physical pages) ──────────────────────────
-// Front Cover        = 1 page  (the cover)
-// Info spread        = 2 pages (Page 1: description  |  Page 2: photo)
-// 14 regular spreads = 28 pages (Pages 3–30)
-// Back Cover         = 1 page
-// Total: 32 pages across 17 views
+
 const PAGES = [
   { id: 'front',  label: 'Front Cover',  type: 'cover'       },
   { id: 'isp',    label: 'Pages 1–2',    type: 'info-spread' },
@@ -98,7 +86,7 @@ const PAGES = [
   { id: 'back',   label: 'Back Cover',   type: 'back'        },
 ];
 
-// ── Spread layout blob-colour configs ───────────────────────────
+
 const LC = [
   { b1: () => CFG.colors[3], b2: () => CFG.colors[4] },
   { b1: () => CFG.colors[4], b2: () => CFG.colors[2] },
@@ -106,9 +94,9 @@ const LC = [
   { b1: () => CFG.colors[3], b2: () => CFG.colors[0] },
 ];
 
-// ── Mutable editor state ────────────────────────────────────────
+
 let imgs        = {};
-let pageFrames  = {};   // array of {x,y,w,h} per spread side key
+let pageFrames  = {};  
 let sstore      = {};
 let curPage     = 0;
 let blobIdx     = 0;

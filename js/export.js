@@ -1,23 +1,12 @@
-/**
- * export.js
- * Exports the entire photobook as a multi-page PDF (8 × 8 inch per page).
- * Uses html-to-image (primary) + jsPDF.
- * Text stickers injected as DOM elements before capture so html-to-image
- * renders them with the correct Google Web Font via Chrome's CSS engine.
- * Image stickers drawn directly on canvas after capture — bypasses the
- * SVG-foreignObject rendering bug that affects html-to-image in Chrome.
- */
-
-const PDF_MM   = 203.2;  // 8 inches in mm
-const BLEED_MM = 6.35;   // 0.25 inch bleed per side
-const MARK_LEN = 4;      // crop mark length (mm)
-const MARK_GAP = 1.5;    // gap between crop mark and image edge (mm)
+const PDF_MM   = 203.2;  
+const BLEED_MM = 6.35;  
+const MARK_LEN = 4;      
+const MARK_GAP = 1.5;    
 
 const SINGLE_TYPES   = ['cover', 'back'];
 const COVER_TYPES    = ['cover', 'back'];
 const CONTENT_TYPES  = ['info-spread', 'sa', 'sb', 'sc', 'sd'];
 
-// ── Public export entry points ────────────────────────────────────
 async function exportCoverPages() {
   await _runExport(COVER_TYPES, 'cover');
 }
@@ -26,7 +15,6 @@ async function exportContentPages() {
   await _runExport(CONTENT_TYPES, 'content');
 }
 
-// ── Shared export core ────────────────────────────────────────────
 async function _runExport(typeFilter, fileSuffix) {
   if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
     alert('Export libraries are still loading — please wait a moment and try again.');
@@ -90,7 +78,6 @@ async function _runExport(typeFilter, fileSuffix) {
   setTimeout(showSuccess, 600);
 }
 
-// ── Export queue ──────────────────────────────────────────────────
 function _buildExportQueue(typeFilter) {
   const queue = [];
   PAGES.forEach(pg => {
@@ -105,7 +92,6 @@ function _buildExportQueue(typeFilter) {
   return queue;
 }
 
-// ── Single-page element builder ───────────────────────────────────
 function _buildSinglePageEl(pg, side) {
   if (!side) return buildPage(pg);
 
@@ -121,11 +107,6 @@ function _buildSinglePageEl(pg, side) {
   return makeSpPage(pg, pg.id + '-' + side, side, layoutIdx, LC[layoutIdx]);
 }
 
-// ── Render page HTML → canvas ─────────────────────────────────────
-// html-to-image uses Chrome's actual CSS engine via SVG foreignObject, which
-// correctly renders organic border-radius blobs, clip-path shapes, etc.
-// Wrapped in a 15-second timeout so it can't hang if font fetching stalls.
-// html2canvas is the fallback: always completes, slightly less CSS-accurate.
 async function _pageToCanvas(el) {
   await _ensureExportFontsLoaded();
   const fontEmbedCSS = await _getGoogleFontsEmbedCSS();
@@ -138,7 +119,7 @@ async function _pageToCanvas(el) {
           backgroundColor: '#FFFAF5',
           cacheBust:       false,
           skipFonts:       false,
-          fontEmbedCSS,        // <-- inline base64 @font-face rules so SVG renders with correct fonts
+          fontEmbedCSS,        
         }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('html-to-image timeout')), 20000)
@@ -178,16 +159,11 @@ async function _ensureExportFontsLoaded() {
   try { await document.fonts.ready; } catch (e) {}
 }
 
-// ── Embed Google Fonts as inline base64 @font-face rules ──────────
-// html-to-image rasterises via SVG <foreignObject>; Chrome's SVG renderer
-// only uses web fonts embedded inline in the SVG (base64 data URLs).
-// The Google Fonts stylesheet is cross-origin, so html-to-image's own auto-
-// embed silently fails (can't read cssRules). We fetch + inline manually.
+
 let _fontEmbedCache = null;
 async function _getGoogleFontsEmbedCSS() {
   if (_fontEmbedCache !== null) return _fontEmbedCache;
 
-  // Match the <link> in index.html exactly
   const GF_URL =
     'https://fonts.googleapis.com/css2' +
     '?family=Baloo+2:wght@400;700;800' +
@@ -198,15 +174,12 @@ async function _getGoogleFontsEmbedCSS() {
     '&display=swap';
 
   try {
-    // Fetch the CSS text (Google returns woff2 @font-face rules for modern browsers)
     const cssText = await fetch(GF_URL, { credentials: 'omit' }).then(r => r.text());
 
-    // Find every font file URL inside url(...) — these live on fonts.gstatic.com (CORS-enabled)
     const urls = Array.from(new Set(
       [...cssText.matchAll(/url\(([^)]+)\)/g)].map(m => m[1].replace(/["']/g, '').trim())
     ));
 
-    // Fetch every font file and convert to base64 data URL in parallel
     const pairs = await Promise.all(urls.map(async u => {
       try {
         const blob = await fetch(u, { credentials: 'omit' }).then(r => r.blob());
@@ -223,11 +196,9 @@ async function _getGoogleFontsEmbedCSS() {
       }
     }));
 
-    // Replace every original URL with its base64 data URL in the CSS
     let embedded = cssText;
     for (const [u, d] of pairs) {
       if (!d) continue;
-      // Escape regex special chars in URL
       const safe = u.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       embedded = embedded.replace(new RegExp(safe, 'g'), d);
     }
@@ -241,12 +212,6 @@ async function _getGoogleFontsEmbedCSS() {
   }
 }
 
-// ── Inject all stickers into DOM before capture (correct z-order) ──
-// Text: injected as styled DOM elements so html-to-image uses the real
-//   CSS engine for Google Web Font rendering (canvas 2D is unreliable).
-// Image: pre-rasterised to PNG via canvas first, then injected as <img>.
-//   SVG data URLs are silently dropped by Chrome's SVG foreignObject
-//   renderer, so converting to PNG avoids blank stickers in the PDF.
 async function _injectAllStickers(pageEl, layerKey) {
   const items = sstore[layerKey];
   if (!items || !items.length) return;
@@ -302,9 +267,6 @@ async function _injectAllStickers(pageEl, layerKey) {
   }
 }
 
-// ── Rasterise a sticker image (any format) to a PNG data URL ──────
-// Draws the source image onto an offscreen canvas at 4× the display size
-// so html-to-image captures it at full PDF resolution.
 async function _stickerToPng(src, displaySize) {
   if (!src) return null;
   const img = await new Promise(res => {
@@ -314,7 +276,7 @@ async function _stickerToPng(src, displaySize) {
     tmp.src = src;
   });
   if (!img) return null;
-  const px  = displaySize * 4;   // match html-to-image's pixelRatio:4
+  const px  = displaySize * 4;   
   const c   = document.createElement('canvas');
   c.width   = px;
   c.height  = px;
@@ -322,8 +284,7 @@ async function _stickerToPng(src, displaySize) {
   return c.toDataURL('image/png');
 }
 
-// ── Draw image stickers only onto the canvas ──────────────────────
-// Text stickers are already captured via DOM injection above.
+
 async function _drawImgStickersOnly(canvas, key, scale) {
   const items = sstore[key];
   if (!items || !items.length) return;
@@ -333,11 +294,7 @@ async function _drawImgStickersOnly(canvas, key, scale) {
   }
 }
 
-// ── Draw all stickers in z-order ──────────────────────────────────
-// Single ordered pass: each sticker drawn in the order it was added
-// (first = bottom, last = top), so the editor's visual stack is preserved.
-// Images use canvas drawImage; text uses canvas 2D with pre-loaded fonts.
-// Each sticker is isolated in try/catch so one bad item can't drop others.
+
 async function _drawStickersInOrder(canvas, key, scale) {
   const items = sstore[key];
   if (!items || !items.length) return canvas;
@@ -357,8 +314,6 @@ async function _drawStickersInOrder(canvas, key, scale) {
   return canvas;
 }
 
-// ── Render a text sticker onto a canvas 2D context ────────────────
-// Fonts are pre-loaded by _ensureExportFontsLoaded before capture.
 function _drawTextStickerOnCanvas(ctx, item, scale) {
   const x       = item.x * scale;
   const y       = item.y * scale;
@@ -367,12 +322,10 @@ function _drawTextStickerOnCanvas(ctx, item, scale) {
   const weight  = item.bold   ? '800' : '400';
   const fstyle  = item.italic ? 'italic ' : '';
   const align   = item.align  || 'left';
-  // Match the 5px left / 2px top padding used in _injectTextStickers
   const padL    = 5 * scale;
   const padT    = 2 * scale;
   const lineH   = fs * 1.3;
 
-  // Normalise contentEditable HTML → plain text with \n line breaks
   const plain = (item.text || '')
     .replace(/<div>/gi,    '\n').replace(/<\/div>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
@@ -423,9 +376,6 @@ async function _drawImgSticker(ctx, item, scale) {
   ctx.restore();
 }
 
-// ── Pre-render CSS background-image photos at export resolution ───
-// Converts each background-image: url(...) to a pre-drawn canvas data URL
-// so html2canvas receives pixel-perfect input instead of re-scaling.
 async function _prerenderPhotos(pageEl) {
   const SCALE = 6;
   const divs  = Array.from(pageEl.querySelectorAll('[style*="background-image"]'));
@@ -436,7 +386,7 @@ async function _prerenderPhotos(pageEl) {
     const m = bg.match(/url\("([^"]+)"\)|url\('([^']+)'\)|url\(([^)]+)\)/);
     if (!m) return;
     const url = (m[1] || m[2] || m[3]).trim();
-    if (!url.startsWith('data:') && !url.startsWith('blob:')) return; // skip non-data URLs
+    if (!url.startsWith('data:') && !url.startsWith('blob:')) return;
 
     const bgSize = div.style.backgroundSize     || 'cover';
     const bgPos  = div.style.backgroundPosition || '50% 50%';
@@ -477,7 +427,6 @@ async function _prerenderPhotos(pageEl) {
   }));
 }
 
-// ── Crop marks ────────────────────────────────────────────────────
 function _drawCropMarks(pdf, o) {
   pdf.setDrawColor(0);
   pdf.setLineWidth(0.2);
@@ -488,7 +437,6 @@ function _drawCropMarks(pdf, o) {
   pdf.line(e+g,  e,     e+g+ml,    e    ); pdf.line(e,    e+g,   e,         e+g+ml );
 }
 
-// ── Progress toast ────────────────────────────────────────────────
 function _showProgress(done, total, msg) {
   const t = document.getElementById('exportToast');
   if (t) t.style.display = 'block';
@@ -507,7 +455,6 @@ function _hideProgress() {
 }
 function _wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── Success modal ─────────────────────────────────────────────────
 function showSuccess() {
   const ov = document.getElementById('successOverlay');
   if (ov) ov.style.display = 'flex';

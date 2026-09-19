@@ -12,31 +12,25 @@
 </head>
 <body>
 
-<!-- ══════════════════════════════════
-     TOP BAR
-══════════════════════════════════ -->
 <div class="topbar">
-  <!-- Brand -->
   <div class="brand">Make-A-Wish <span>&nbsp;Photobook</span></div>
 
-  <!-- Tab buttons -->
   <div class="tabs">
     <button class="tab on"  id="t1" onclick="goTab('c')"><span class="num">1</span> Customise</button>
     <button class="tab off" id="t2" onclick="goTab('e')"><span class="num">2</span> Edit Photobook</button>
   </div>
 
-  <!-- Editor-only controls (hidden on customise tab) -->
   <div class="top-acts" id="eActs" style="display:none">
     <label>Name  <input type="text"   id="cName"  value="Alex"                          oninput="rp();scheduleSave()"></label>
     <label>Age   <input type="number" id="cAge"   value="8" min="1" max="18"            oninput="rp();scheduleSave()"></label>
     <label>Wish  <input type="text"   id="cWish"  value="To be a superhero for a day!"  oninput="rp();scheduleSave()"></label>
     <div class="vr"></div>
-    <!-- Undo / Redo -->
+
     <button class="btn btn-undo" id="undoBtn" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩</button>
     <button class="btn btn-undo" id="redoBtn" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪</button>
     <div class="vr"></div>
     <button class="btn btn-t" id="sidebarBtn" onclick="toggleSidebar()">✏ Text &amp; Stickers</button>
-    <!-- Crop marks -->
+
     <label style="color:rgba(255,255,255,.55);font-size:10px;gap:4px;white-space:nowrap">
       <input type="checkbox" id="cropMarksChk" style="width:auto;display:inline"> Crop marks
     </label>
@@ -45,12 +39,8 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════
-     LAYOUT WRAPPER
-══════════════════════════════════ -->
 <div class="app-body">
 
-  <!-- ── VIEW 1: CUSTOMISE ── -->
   <div class="view on" id="vc">
     <div class="cw">
       <div class="chdr">
@@ -58,7 +48,6 @@
         <p>Choose your colours, font, and shape style. These apply across every page of the book.</p>
       </div>
 
-      <!-- LIVE PREVIEW -->
       <div class="mini-preview-card">
         <div class="mini-preview-title">Live Preview</div>
         <div class="mini-preview-outer">
@@ -66,20 +55,17 @@
         </div>
       </div>
 
-      <!-- 1. COLOUR SCHEME -->
       <div class="sc">
         <div class="slbl"><span class="sn">1</span> Colour Scheme <span class="slbl-note">— up to 5 colours</span></div>
         <div class="presets" id="presets"></div>
         <div class="cprow"   id="cprow"></div>
       </div>
 
-      <!-- 2. FONT -->
       <div class="sc">
         <div class="slbl"><span class="sn">2</span> Font Style</div>
         <div class="fgrid" id="fgrid"></div>
       </div>
 
-      <!-- 3. SHAPE STYLE -->
       <div class="sc">
         <div class="slbl"><span class="sn">3</span> Shape Style</div>
         <div class="sgrid">
@@ -100,13 +86,11 @@
         </div>
       </div>
 
-      <!-- 4. PAGE STYLE -->
       <div class="sc">
         <div class="slbl"><span class="sn">4</span> Page Style</div>
         <div class="pgstyle-grid" id="pgBgGrid"></div>
       </div>
 
-      <!-- 5. CUSTOM STICKERS -->
       <div class="sc">
         <div class="slbl"><span class="sn">5</span> Upload Extra Stickers <span class="slbl-note">— add your own PNG images</span></div>
         <div class="stk-area" id="stkArea">
@@ -125,16 +109,14 @@
     </div>
   </div>
 
-  <!-- ── VIEW 2: EDITOR ── -->
   <div class="view" id="ve">
 
-    <!-- Editor canvas column -->
     <div class="editor-main" id="editorMain">
       <div class="pnav">
         <button id="pvb" onclick="gp(-1)" disabled>◀</button>
         <div class="pinfo" id="pinfo">Front Cover</div>
         <button id="nxb" onclick="gp(1)">▶</button>
-        <!-- Zoom controls -->
+  
         <div class="zoom-row">
           <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">−</button>
           <span id="zoomPct">100%</span>
@@ -144,7 +126,6 @@
       <div class="cwrap" id="cwrap"></div>
     </div>
 
-    <!-- Sidebar (hidden until toggled) -->
     <div class="sidebar" id="sidebar">
       <div class="sb-header">
         <div class="sb-tabs">
@@ -154,7 +135,6 @@
         <button class="sb-close" onclick="toggleSidebar()">✕</button>
       </div>
 
-      <!-- Page-side picker -->
       <div class="sb-page-picker" id="sbPagePicker" style="display:none">
         <span class="sb-page-label">Place on:</span>
         <div class="sb-page-btns">
@@ -163,7 +143,6 @@
         </div>
       </div>
 
-      <!-- TEXT PANEL -->
       <div class="sb-panel" id="sbp-text" style="display:flex">
         <div class="sb-section-title">Text Options</div>
 
@@ -194,7 +173,6 @@
           </div>
         </label>
 
-        <!-- Formatting buttons -->
         <div class="sb-section-title" style="margin-top:10px">Formatting</div>
         <div class="sb-fmt-row">
           <button class="sb-fmt-btn on"  id="fmtBold"      title="Bold"        onclick="updateSelectedBold()"><b>B</b></button>
@@ -209,7 +187,6 @@
         <p class="sb-hint">Click a text box to select it, then drag to move. Use ↻ handle to rotate. Delete key removes selected. Arrows nudge.</p>
       </div>
 
-      <!-- STICKERS PANEL -->
       <div class="sb-panel" id="sbp-stickers" style="display:none">
         <div class="sb-section-title">Sticker Options</div>
 
@@ -236,24 +213,20 @@
       </div>
     </div>
 
-  </div><!-- /ve -->
+  </div>
 
-</div><!-- /app-body -->
+</div>
 
-<!-- Export progress toast -->
 <div id="exportToast" class="export-toast" style="display:none">
   <div class="export-title">Exporting PDF…</div>
   <div id="exportMsg" class="export-msg">Preparing pages…</div>
   <div class="export-track"><div id="exportBar" class="export-bar"></div></div>
 </div>
 
-<!-- Off-screen render target -->
 <div id="exportRoot"></div>
 
-<!-- Fixed bottom thumbnail strip -->
 <div class="tstrip" id="tstrip"></div>
 
-<!-- Success modal -->
 <div id="successOverlay" class="success-overlay" style="display:none" onclick="closeSuccess()">
   <div class="success-modal" onclick="event.stopPropagation()">
     <div class="success-icon">
@@ -275,7 +248,6 @@
   </div>
 </div>
 
-<!-- Crop / Reposition modal -->
 <div id="cropOverlay" class="crop-overlay" style="display:none" onclick="if(event.target===this)closeCropModal()">
   <div class="crop-modal">
     <div class="crop-modal-title">Reposition Photo</div>
@@ -293,10 +265,8 @@
   </div>
 </div>
 
-<!-- Hidden file inputs container -->
 <div id="fi"></div>
 
-<!-- Scripts — autosave + history load before customise so CFG is primed -->
 <script src="js/config.js"></script>
 <script src="js/helpers.js"></script>
 <script src="js/autosave.js"></script>
@@ -308,12 +278,12 @@
 <script src="js/export.js"></script>
 <script>
   (async () => {
-    await restoreState();   // prime CFG, imgs, sstore, name/age/wish (async: loads imgs from IndexedDB)
-    buildCustomiseUI();     // build UI from current CFG
-    syncCustomiseUI();      // sync all pickers to restored CFG values
-    buildStickerGrid();     // build sticker grid
-    refreshMiniPreview();   // render initial mini preview
-    _huiUpdate();           // set initial undo/redo button states
+    await restoreState();   
+    buildCustomiseUI();    
+    syncCustomiseUI();      
+    buildStickerGrid();     
+    refreshMiniPreview();   
+    _huiUpdate();           
   })();
 </script>
 

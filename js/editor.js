@@ -1,10 +1,3 @@
-/**
- * editor.js
- * Tab switching, page navigation, photo uploads, sidebar, text/sticker placement,
- * zoom controls, and photo crop/reposition modal.
- */
-
-// ── Side selection state ─────────────────────────────────────────
 let _activeSide = 'L';
 const SPREAD_TYPES = ['sa', 'sb', 'sc', 'sd', 'info-spread'];
 
@@ -27,7 +20,6 @@ function _updatePagePicker(pg) {
   if (isSpread) setSide('L');
 }
 
-// ── Tab switching ────────────────────────────────────────────────
 function goTab(tab) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
@@ -46,7 +38,6 @@ function goTab(tab) {
   }
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────
 let sidebarOpen = false;
 
 function toggleSidebar() {
@@ -64,13 +55,11 @@ function sbTab(tab) {
   document.getElementById('sbp-' + tab).style.display = 'flex';
 }
 
-// ── Sticker grid ─────────────────────────────────────────────────
 function buildStickerGrid() {
   const grid = document.getElementById('stickerGrid');
   if (!grid) return;
   grid.innerHTML = '';
 
-  // Upload button
   const upBtn = document.createElement('div');
   upBtn.className = 'sticker-thumb sticker-upload-btn';
   upBtn.title     = 'Upload custom sticker';
@@ -112,9 +101,7 @@ function _rebuildCustomStickerGrid() {
   });
 }
 
-// ── Sticker placement ─────────────────────────────────────────────
 function _placeImageSticker(file) {
-  // Use pre-bundled data URL so the sticker is always exportable (no file:// fetch needed)
   _placeOnLayer(STICKER_DATA_URLS[file] || STICKERS_PATH + file);
 }
 function _placeImageStickerFromURL(url) { _placeOnLayer(url); }
@@ -130,7 +117,6 @@ function _placeOnLayer(src) {
   addImageSticker(key, src, x, y, sz, rot);
 }
 
-// ── Page rendering ───────────────────────────────────────────────
 function rp() { renderPage(); }
 
 function renderPage() {
@@ -140,7 +126,6 @@ function renderPage() {
   const el = buildPage(pg);
   wrap.appendChild(el);
 
-  // Restore stickers now that element is in the DOM
   if (SPREAD_TYPES.includes(pg.type)) {
     restoreS(pg.id + '-L', true);
     restoreS(pg.id + '-R', true);
@@ -157,7 +142,6 @@ function renderPage() {
   _updatePagePicker(pg);
 }
 
-// ── Page navigation ──────────────────────────────────────────────
 function buildThumbs() {
   const strip = document.getElementById('tstrip');
   if (!strip) return;
@@ -186,7 +170,6 @@ function setPage(idx) {
     ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
-// ── Photo upload ─────────────────────────────────────────────────
 function upload(sid) {
   let inp = document.getElementById('fi-' + sid);
   if (!inp) {
@@ -209,7 +192,6 @@ function upload(sid) {
   inp.click();
 }
 
-// ── Text placement ────────────────────────────────────────────────
 function placeTextBox() {
   const pg       = PAGES[curPage];
   const key      = _currentLayerKey(pg);
@@ -219,7 +201,6 @@ function placeTextBox() {
   addTextBox(key, 160, 60, '', fontSize, color, CFG.font);
 }
 
-// ── Zoom controls ─────────────────────────────────────────────────
 let _canvasZoom = 1.0;
 const ZOOM_STEPS = [0.4, 0.5, 0.6, 0.75, 1.0, 1.25, 1.5, 2.0];
 
@@ -246,7 +227,6 @@ function setZoom(z) {
   if (lbl) lbl.textContent = Math.round(z * 100) + '%';
 }
 
-// ── Crop / Reposition modal ───────────────────────────────────────
 let _cropSid  = null;
 let _cropOx   = 50;
 let _cropOy   = 50;
@@ -288,10 +268,8 @@ function _cropRefreshPreview() {
 function _cropSetupDrag() {
   const vp = document.getElementById('cropViewport');
   if (!vp) return;
-  // Remove previous listeners by cloning
   const fresh = vp.cloneNode(true);
   vp.parentNode.replaceChild(fresh, vp);
-  // Re-apply background
   const stored = imgs[_cropSid];
   const url    = typeof stored === 'string' ? stored : stored?.url;
   if (url) {
@@ -300,7 +278,6 @@ function _cropSetupDrag() {
     fresh.style.backgroundPosition = `${_cropOx}% ${_cropOy}%`;
     fresh.style.backgroundRepeat   = 'no-repeat';
   }
-  // Zoom slider
   document.getElementById('cropZoomSlider')?.addEventListener('input', function() {
     _cropZoom = parseInt(this.value) / 100;
     _cropRefreshPreview();
@@ -371,9 +348,8 @@ function closeCropModal() {
   _cropSid = null;
 }
 
-// ── Direct photo pan (drag on canvas to move image within frame) ───
 function startPhotoPan(e, el, sid) {
-  e.stopPropagation(); // don't trigger frame drag
+  e.stopPropagation(); 
 
   const stored = imgs[sid];
   if (!stored) { upload(sid); return; }
@@ -390,7 +366,7 @@ function startPhotoPan(e, el, sid) {
     const dx = (ev.clientX - startX) / zoom;
     const dy = (ev.clientY - startY) / zoom;
     if (Math.abs(dx) + Math.abs(dy) < 4) return;
-    if (data.zoom <= 1) return; // can't pan at zoom=1; click will open modal instead
+    if (data.zoom <= 1) return; 
     if (!dragging) { pushHistory?.(); dragging = true; }
     ev.preventDefault();
     el.style.cursor = 'grabbing';
@@ -412,7 +388,7 @@ function startPhotoPan(e, el, sid) {
       imgs[sid] = { url: data.url, ox: data.ox, oy: data.oy, zoom: data.zoom };
       scheduleSave?.();
     } else {
-      openCropModal(sid); // treat as click → open modal (for zoom / replace / remove)
+      openCropModal(sid);
     }
   };
 
@@ -420,7 +396,6 @@ function startPhotoPan(e, el, sid) {
   document.addEventListener('mouseup', up);
 }
 
-// ── Frame count picker ────────────────────────────────────────────
 let _lpKey = null;
 
 const _LP_COUNT_THUMBS = [
@@ -480,13 +455,11 @@ function closeLayoutPicker() {
   _lpKey = null;
 }
 
-// ── Frame drag & resize ───────────────────────────────────────────
 const _SP_SIZE = 560;
 const _FRAME_MIN = 60;
 
 function startFrameDrag(e, el, key, idx) {
   e.stopPropagation();
-  // Resolve to the .sp-frame element (handle is a child of it)
   const frameEl = el.classList?.contains('sp-frame') ? el : el.closest('.sp-frame');
   if (!frameEl) return;
 
@@ -546,7 +519,6 @@ function startFrameResize(e, handleEl, key, idx, corner) {
     if (corner === 'ne') { w = Math.max(_FRAME_MIN, ow + dx); const nh = Math.max(_FRAME_MIN, oh - dy); y = oy + oh - nh; h = nh; }
     if (corner === 'nw') { const nw = Math.max(_FRAME_MIN, ow - dx); x = ox + ow - nw; w = nw; const nh = Math.max(_FRAME_MIN, oh - dy); y = oy + oh - nh; h = nh; }
 
-    // Clamp to page bounds
     x = Math.max(0, x); y = Math.max(0, y);
     w = Math.min(w, _SP_SIZE - x); h = Math.min(h, _SP_SIZE - y);
     return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };

@@ -1,23 +1,7 @@
-/**
- * stickers.js
- * All on-canvas elements: text boxes, image stickers.
- * Every element uses a shared wrapper with:
- *   • delta-based drag (smooth, rotation-safe)
- *   • rotate handle + degree badge
- *   • × delete button
- *   • text formatting: bold, italic, align
- * Keyboard shortcuts: Delete, Ctrl+Z/Y, Arrow nudge
- */
-
-// ── Shared active-element tracker ───────────────────────────────
 let _activeWrap = null;
 
-// ── Dropzone (for future drag-from-bar support) ──────────────────
 function setupDropzone(el, key) {
-  // No drag-from-bar in this version; stickers placed via sidebar click.
 }
-
-// ── Add functions (called externally) ───────────────────────────
 
 function addTextBox(key, x, y, text, fontSize, color, fontFamily) {
   const bold      = document.getElementById('fmtBold')?.classList.contains('on')      ?? true;
@@ -40,7 +24,6 @@ function addImageSticker(key, src, x, y, size, rotation) {
   scheduleSave?.();
 }
 
-// ── Rendering dispatcher ─────────────────────────────────────────
 function _renderItem(key, item) {
   const layer = document.getElementById('sl-' + key);
   if (!layer) return;
@@ -58,7 +41,6 @@ function _renderItem(key, item) {
   _makeDraggable(wrap, item);
 }
 
-// ── TEXT WRAPPER ─────────────────────────────────────────────────
 function _makeTextWrap(item) {
   if (item.rotation  === undefined) item.rotation  = 0;
   if (item.bold      === undefined) item.bold      = true;
@@ -74,7 +56,6 @@ function _makeTextWrap(item) {
 
   wrap.addEventListener('mousedown', () => _syncToolbar(wrap, item));
 
-  // × delete
   const del = _makeDelBtn(() => {
     pushHistory?.();
     if (_activeWrap === wrap) _activeWrap = null;
@@ -84,12 +65,10 @@ function _makeTextWrap(item) {
   });
   wrap.appendChild(del);
 
-  // Rotate badge + handle
   const { badge, handle } = _makeRotateControls(wrap, item);
   wrap.appendChild(badge);
   wrap.appendChild(handle);
 
-  // Editable text element
   const t = document.createElement('div');
   t.className           = 'textbox';
   t.contentEditable     = 'true';
@@ -132,7 +111,6 @@ function _makeTextWrap(item) {
   return wrap;
 }
 
-// ── IMAGE STICKER WRAPPER ─────────────────────────────────────────
 function _makeImgWrap(item) {
   const wrap = document.createElement('div');
   wrap.className       = 'stk-wrap';
@@ -142,7 +120,6 @@ function _makeImgWrap(item) {
 
   wrap.addEventListener('mousedown', () => _syncToolbar(wrap, item));
 
-  // × delete
   const del = _makeDelBtn(() => {
     pushHistory?.();
     if (_activeWrap === wrap) _activeWrap = null;
@@ -152,12 +129,10 @@ function _makeImgWrap(item) {
   });
   wrap.appendChild(del);
 
-  // Rotate badge + handle
   const { badge, handle } = _makeRotateControls(wrap, item);
   wrap.appendChild(badge);
   wrap.appendChild(handle);
 
-  // The image
   const img = document.createElement('img');
   img.src              = item.src;
   img.style.width      = item.size + 'px';
@@ -183,8 +158,6 @@ function _makeImgWrap(item) {
   wrap.appendChild(img);
   return wrap;
 }
-
-// ── SHARED CONTROL BUILDERS ──────────────────────────────────────
 
 function _makeDelBtn(onDelete) {
   const del = document.createElement('div');
@@ -255,8 +228,6 @@ function _syncToolbar(wrap, item) {
   }
 }
 
-// ── Text formatting ───────────────────────────────────────────────
-
 function _activeAlign() {
   if (document.getElementById('fmtAlignC')?.classList.contains('on')) return 'center';
   if (document.getElementById('fmtAlignR')?.classList.contains('on')) return 'right';
@@ -317,7 +288,6 @@ function updateSelectedAlign(val) {
   scheduleSave?.();
 }
 
-// ── Text colour picker (theme swatches) ──────────────────────────
 function pickTextColor(idx) {
   const color = CFG.colors[idx];
   if (!color) return;
@@ -330,7 +300,6 @@ function pickTextColor(idx) {
   scheduleSave?.();
 }
 
-// ── Sticker size input handler ───────────────────────────────────
 function updateStickerSize(val) {
   if (!_activeWrap?._item || _activeWrap._item.type !== 'img') return;
   const v = parseInt(val);
@@ -342,7 +311,6 @@ function updateStickerSize(val) {
   scheduleSave?.();
 }
 
-// ── Toolbar rotation input handler (called via oninput in HTML) ──
 function updateSelectedRotation(val) {
   if (!_activeWrap) return;
   const deg  = parseFloat(val) || 0;
@@ -353,7 +321,6 @@ function updateSelectedRotation(val) {
   scheduleSave?.();
 }
 
-// ── RESTORE ──────────────────────────────────────────────────────
 function restoreS(key, immediate = false) {
   const stored = sstore[key];
   if (!stored || !stored.length) return;
@@ -361,7 +328,6 @@ function restoreS(key, immediate = false) {
   immediate ? render() : setTimeout(render, 10);
 }
 
-// ── Remove item from sstore when deleted from canvas ─────────────
 function _removeFromSstore(item) {
   for (const key of Object.keys(sstore)) {
     const arr = sstore[key];
@@ -370,7 +336,6 @@ function _removeFromSstore(item) {
   }
 }
 
-// ── DELTA-BASED DRAG ─────────────────────────────────────────────
 const DRAG_THRESHOLD = 5;
 
 function _makeDraggable(wrap, item) {
@@ -432,12 +397,10 @@ function _makeDraggable(wrap, item) {
   });
 }
 
-// ── Keyboard shortcuts ────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   const tag = document.activeElement?.tagName;
   const ce  = document.activeElement?.contentEditable === 'true';
 
-  // Undo/redo always (even in inputs)
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
     e.preventDefault(); undo?.(); return;
   }
@@ -445,10 +408,8 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); redo?.(); return;
   }
 
-  // Rest only when not typing in an input/textarea/contenteditable
   if (tag === 'INPUT' || tag === 'TEXTAREA' || ce) return;
 
-  // Delete active element
   if ((e.key === 'Delete' || e.key === 'Backspace') && _activeWrap) {
     pushHistory?.();
     _removeFromSstore(_activeWrap._item);
@@ -458,7 +419,6 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  // Arrow-key nudge
   if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key) && _activeWrap) {
     e.preventDefault();
     const step = e.shiftKey ? 10 : 2;
@@ -473,7 +433,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Custom sticker upload (from Customise tab) ───────────────────
 function addCustomStickers(input) {
   Array.from(input.files).forEach(f => {
     const r = new FileReader();
@@ -494,5 +453,4 @@ function addCustomStickers(input) {
   input.value = '';
 }
 
-// ── Sticker grid rebuild helper ──────────────────────────────────
 function rebuildStickerBar() { _rebuildCustomStickerGrid?.(); }

@@ -1,9 +1,3 @@
-/**
- * history.js
- * Undo / redo via full snapshots of sstore + imgs.
- * Depends on: config.js (imgs, sstore), editor.js (renderPage)
- */
-
 const _undoStack = [];
 const _redoStack = [];
 const MAX_HISTORY = 35;
@@ -29,7 +23,6 @@ function _happly(raw) {
   _huiUpdate();
 }
 
-/** Call before any state-mutating action (photo upload, sticker add/delete). */
 function pushHistory() {
   _undoStack.push(_hsnap());
   if (_undoStack.length > MAX_HISTORY) _undoStack.shift();

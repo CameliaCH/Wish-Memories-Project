@@ -1,10 +1,3 @@
-/**
- * customise.js
- * Builds and manages the Customise tab UI.
- * Depends on: config.js, helpers.js, builder.js, autosave.js
- */
-
-/** Called once on page load to build all customise tab UI. */
 function buildCustomiseUI() {
   _buildPresets();
   _buildColorPickers();
@@ -14,31 +7,22 @@ function buildCustomiseUI() {
   _refreshShapeDemos();
 }
 
-/**
- * Re-syncs all customise tab UI controls to the current CFG values.
- * Called after restoreState() to reflect saved choices.
- */
 function syncCustomiseUI() {
-  // Colour pickers
   CFG.colors.forEach((col, i) => {
     const sw = document.getElementById('sw-' + i);
     const cp = document.getElementById('cp-' + i);
     if (sw) sw.style.background = col;
     if (cp) cp.value = col;
   });
-  // Preset borders
   document.querySelectorAll('.preset').forEach((p, j) => {
     const match = PALETTES[j]?.c.every((c, i) => c.toLowerCase() === CFG.colors[i]?.toLowerCase());
     p.classList.toggle('sel', !!match);
   });
-  // Font
   document.querySelectorAll('.fc').forEach(c => c.classList.remove('sel'));
   const fcEl = document.getElementById('fc-' + CFG.font.replace(/\s/g, '-'));
   if (fcEl) fcEl.classList.add('sel');
-  // Shape
   document.getElementById('sh-curved')?.classList.toggle('sel', CFG.shape === 'curved');
   document.getElementById('sh-angular')?.classList.toggle('sel', CFG.shape === 'angular');
-  // Page bg
   document.querySelectorAll('.pgstyle-card').forEach(c => {
     c.classList.toggle('sel', c.dataset.style === CFG.pageBg);
   });
@@ -46,7 +30,6 @@ function syncCustomiseUI() {
   _refreshShapeDemos();
 }
 
-// ── Palette presets ──────────────────────────────────────────────
 function _buildPresets() {
   const pp = document.getElementById('presets');
   PALETTES.forEach((p, i) => {
@@ -68,7 +51,6 @@ function applyPalette(i) {
   scheduleSave?.();
 }
 
-// ── Individual colour pickers ────────────────────────────────────
 function _buildColorPickers() {
   const cr = document.getElementById('cprow');
   CFG.colors.forEach((col, i) => {
@@ -112,7 +94,6 @@ function _refreshShapeDemos() {
   document.querySelectorAll('.di.dia').forEach(el  => { el.style.background = CFG.colors[3]; });
 }
 
-// ── Font picker ──────────────────────────────────────────────────
 function _buildFontGrid() {
   const fg = document.getElementById('fgrid');
   FONTS.forEach(f => {
@@ -135,7 +116,6 @@ function pickFont(id) {
   scheduleSave?.();
 }
 
-// ── Shape style ──────────────────────────────────────────────────
 function pickShape(s) {
   CFG.shape = s;
   document.getElementById('sh-curved').classList.toggle('sel', s === 'curved');
@@ -144,7 +124,6 @@ function pickShape(s) {
   scheduleSave?.();
 }
 
-// ── Page background style ────────────────────────────────────────
 const PAGE_BG_OPTIONS = [
   { id: 'default', label: 'Default',  desc: 'Blob accents only' },
   { id: 'dots',    label: 'Dots',     desc: 'Subtle dot pattern' },
@@ -177,17 +156,14 @@ function pickPageBg(style) {
   scheduleSave?.();
 }
 
-// ── Live mini-preview ────────────────────────────────────────────
 function refreshMiniPreview() {
   const inner = document.getElementById('miniPreviewInner');
   if (!inner) return;
   inner.innerHTML = '';
-  // makeFront accepts null pg for preview-only rendering (no sticker layer)
   const el = makeFront(null);
   inner.appendChild(el);
 }
 
-// ── Custom sticker upload ────────────────────────────────────────
 function addCustomStickers(input) {
   Array.from(input.files).forEach(f => {
     const r = new FileReader();

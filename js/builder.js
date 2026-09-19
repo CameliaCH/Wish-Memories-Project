@@ -1,15 +1,3 @@
-/**
- * builder.js
- * Constructs DOM elements for every page type.
- * Returns a detached DOM node ready to be appended to the canvas or export container.
- * Depends on: config.js, helpers.js, stickers.js
- */
-
-// ── Page background overlay ───────────────────────────────────────
-/**
- * Returns an optional full-bleed pattern overlay div based on CFG.pageBg.
- * Injected as the first child so it sits behind blobs and content.
- */
 function _pageBgOverlay() {
   if (!CFG.pageBg || CFG.pageBg === 'default') return '';
   let bgStyle = '';
@@ -23,7 +11,6 @@ function _pageBgOverlay() {
   return `<div style="position:absolute;inset:0;z-index:0;pointer-events:none;${bgStyle}"></div>`;
 }
 
-// ── FRONT COVER ──────────────────────────────────────────────────
 function makeFront(pg) {
   blobIdx = 0;
   const d = document.createElement('div');
@@ -75,7 +62,6 @@ function makeFront(pg) {
   return d;
 }
 
-// ── BACK COVER ───────────────────────────────────────────────────
 function makeBack(pg) {
   blobIdx = 0;
   const d = document.createElement('div');
@@ -111,12 +97,6 @@ function makeBack(pg) {
 }
 
 
-// ── INNER SPREAD ─────────────────────────────────────────────────
-
-/**
- * Default frame positions for 1, 2, or 3 frames on a 560×560 page.
- * Each frame: { x, y, w, h } in pixels.
- */
 const FRAME_DEFAULTS = {
   0: [],
   1: [{ x:24, y:24, w:512, h:512 }],
@@ -131,7 +111,6 @@ const FRAME_DEFAULTS = {
   ],
 };
 
-/** Returns frames array for a key, initialising defaults on first access. */
 function _getFrames(key, defaultCount) {
   if (!pageFrames[key]) {
     const tpl = FRAME_DEFAULTS[defaultCount] || FRAME_DEFAULTS[2];
@@ -140,7 +119,6 @@ function _getFrames(key, defaultCount) {
   return pageFrames[key];
 }
 
-/** Builds one resizable/draggable photo frame element as an HTML string. */
 function _frameHTML(key, idx, frame) {
   const sid = key + '-' + idx;
   const data = _imgData(imgs[sid]);
@@ -211,7 +189,6 @@ function makeSpPage(pg, key, side, layoutIdx, lc) {
   const bStyle = blobStyle('50% 40% 60% 40%');
   const bgOv   = _pageBgOverlay();
   const isL    = side === 'L';
-  // Alternate diagonal direction by layout type for visual variety
   const flipDiag = layoutIdx % 2 === 1;
   const bp     = flipDiag
     ? (isL ? 'top:-40px;right:-40px'    : 'bottom:-30px;left:-30px')
@@ -226,7 +203,6 @@ function makeSpPage(pg, key, side, layoutIdx, lc) {
     `<div style="position:absolute;${bp2};width:150px;height:130px;background:${b2};${bStyle2};opacity:.22;z-index:0"></div>`;
   const pgl    = `<div class="pgn ${isL ? 'pgl' : 'pgr'}">${pn}</div>`;
 
-  // Default count varies by spread type: sc→3, others→2
   const defaultCount = layoutIdx === 2 ? 3 : 2;
   const frames = _getFrames(key, defaultCount);
   const framesHTML = frames.map((f, i) => _frameHTML(key, i, f)).join('');
@@ -236,7 +212,6 @@ function makeSpPage(pg, key, side, layoutIdx, lc) {
   return d;
 }
 
-// ── INFO SPREAD (Pages 1–2): description left | photo page right ──
 function makeInfoSpread(pg) {
   blobIdx = 0;
   const wrap = document.createElement('div');
@@ -244,7 +219,6 @@ function makeInfoSpread(pg) {
 
   const bgOv = _pageBgOverlay();
 
-  // ── LEFT PAGE: child description ─────────────────────────────
   const lKey = pg.id + '-L';
   const left  = document.createElement('div');
   left.className = 'sp';
@@ -295,7 +269,6 @@ function makeInfoSpread(pg) {
 
   setupDropzone(left, lKey);
 
-  // ── RIGHT PAGE: standard photo page ──────────────────────────
   blobIdx = 4;
   const rKey  = pg.id + '-R';
   const right = document.createElement('div');
@@ -325,12 +298,6 @@ function makeInfoSpread(pg) {
   return wrap;
 }
 
-// ── DISPATCHER ───────────────────────────────────────────────────
-/**
- * Builds and returns the correct page element for the given PAGES entry.
- * @param {object} pg - entry from PAGES array
- * @returns {HTMLElement}
- */
 function buildPage(pg) {
   switch (pg.type) {
     case 'cover': return makeFront(pg);
